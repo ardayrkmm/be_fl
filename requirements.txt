@@ -1,0 +1,12 @@
+Flask
+Flask-SQLAlchemy
+Flask-JWT-Extended
+Flask-Migrate
+Flask-Cors
+PyMySQL
+marshmallow
+flask-marshmallow
+flask-socketio
+eventlet
+tensorflow
+numpy

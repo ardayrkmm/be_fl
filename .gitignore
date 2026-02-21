@@ -1,4 +1,15 @@
+# Environments (jangan sampai ke-push)
 venv/
 env/
 .venv/
+.env
+
+# File kompilasi Python
 __pycache__/
+*.py[cod]
+*$py.class
+instance/
+
+# File bawaan sistem operasi (opsional tapi disarankan)
+.DS_Store
+Thumbs.db
