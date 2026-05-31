@@ -1,0 +1,14 @@
+Alfabet_ankle
+Calf_Raises
+Half_Squat
+Knee_to_Chest
+Quadriceps_Stretch
+Seated_Knee
+Seated_rotation_Strech
+Side_Lying_Clam_Shell
+Side_Lying_Leg_Raises
+Single_Leg_Balance
+Standing_Calf_Stretch
+Straight_Leg_Raise
+Supine_Hamstring_Stretch
+Towel_Strech

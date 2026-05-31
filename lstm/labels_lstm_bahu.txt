@@ -1,0 +1,7 @@
+Cross_Arm_Stretch
+Pendulum_Exercise
+Shoulder_Shrug
+Standing_Shoulder_Abduction
+Wall_Angel
+Wall_Push_Up
+

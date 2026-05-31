@@ -20,13 +20,16 @@ def create_question():
             title=req.get("title"),
             subtitle=req.get("subtitle"),
             multiSelect=req.get("multiSelect"),
-            target_field=req.get("target_field")
+          
+            id_bagian=req.get("id_bagian"),
+            urutan=req.get("urutan")
         )
 
         for opt in req.get("options", []):
             question.options.append(
                 QuestionOption(
                     id=str(uuid.uuid4())[:8],
+                    key=opt.get("key"),   # ✅ FIX TAMBAHAN
                     label=opt.get("label"),
                     nilai=opt.get("nilai")
                 )
@@ -35,8 +38,6 @@ def create_question():
         db.session.add(question)
         db.session.commit()
 
-        # Di Flask, kita perlu mengembalikan data secara manual karena SQLAlchemy 
-        # tidak otomatis men-serialize objek seperti GORM.
         req["id"] = new_id
         return jsonify(req), 201
 
@@ -44,38 +45,85 @@ def create_question():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-
 from sqlalchemy.orm import joinedload
 
 @question_bp.route("/questions", methods=["GET"])
 def get_questions():
     try:
-        # Sama seperti Preload("Options") di GORM
-        questions = Question.query.options(joinedload(Question.options)).all()
-        
+        id_bagian = request.args.get("id_bagian")
+
+        # =========================
+        # QUERY BASE
+        # =========================
+        query = Question.query.options(
+            joinedload(Question.options)
+        )
+
+        # =========================
+        # FILTER LOGIC
+        # =========================
+        if id_bagian:
+            query = query.filter(
+                (Question.id_bagian == id_bagian) |
+                (Question.id_bagian.is_(None))
+            )
+        else:
+            # STEP AWAL: hanya question umum (bagian selection)
+            query = query.filter(Question.id_bagian.is_(None))
+
+        # =========================
+        # ORDER
+        # =========================
+        questions = query.order_by(
+            Question.urutan.is_(None),
+            Question.urutan.asc()
+        ).all()
+
+        # =========================
+        # FORMAT RESPONSE
+        # =========================
+        # Map category → target_field agar Flutter bisa routing per step
+        CATEGORY_TARGET_MAP = {
+            "PAIN":     "tingkat_nyeri",
+            "DURATION": "durasi_nyeri_minggu",
+            "RF":       "red_flag",
+            None:       "id_bagian",  # pertanyaan pilih bagian tubuh
+        }
+
         result = []
+
         for q in questions:
+            target_field = CATEGORY_TARGET_MAP.get(q.category, "id_bagian")
             result.append({
                 "id": q.id,
                 "title": q.title,
                 "subtitle": q.subtitle,
                 "multiSelect": q.multiSelect,
-                "target_field": q.target_field,
+
+                # penting untuk step logic Flutter
+                "id_bagian": q.id_bagian,
+                "target_field": target_field,  # 🔥 WAJIB untuk routing step Flutter
+
+                "urutan": q.urutan,
+
                 "options": [
                     {
-                        "id": o.id, 
-                        "question_id": o.question_id, 
-                        "label": o.label, 
+                        "id": o.id,
+                        "key": o.key,
+                        "label": o.label,
                         "nilai": o.nilai
-                    } for o in q.options
+                    }
+                    for o in q.options
                 ]
             })
-            
-        return jsonify(result), 200
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
+        return jsonify(result), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 @question_bp.route("/questions/<id>", methods=["PUT"])
 def update_question(id):
@@ -89,24 +137,27 @@ def update_question(id):
         return jsonify({"error": "Payload tidak valid"}), 400
 
     try:
-        # Update field utama
         question.title = req.get("title", question.title)
         question.subtitle = req.get("subtitle", question.subtitle)
         question.multiSelect = req.get("multiSelect", question.multiSelect)
         question.target_field = req.get("target_field", question.target_field)
 
-        # Sama persis dengan GORM: Hapus opsi lama
-        QuestionOption.query.filter_by(question_id=id).delete()
+        if "id_bagian" in req:
+            question.id_bagian = req.get("id_bagian")
+        if "urutan" in req:
+            question.urutan = req.get("urutan")
 
-        # Masukkan opsi baru
+        question.options.clear()
+
         for opt in req.get("options", []):
-            new_opt = QuestionOption(
-                id=str(uuid.uuid4())[:8],
-                question_id=id,
-                label=opt.get("label"),
-                nilai=opt.get("nilai")
+            question.options.append(
+                QuestionOption(
+                    id=str(uuid.uuid4())[:8],
+                    key=opt.get("key"),   # ✅ FIX TAMBAHAN
+                    label=opt.get("label"),
+                    nilai=opt.get("nilai")
+                )
             )
-            db.session.add(new_opt)
 
         db.session.commit()
 
@@ -121,12 +172,12 @@ def update_question(id):
 @question_bp.route("/questions/<id>", methods=["DELETE"])
 def delete_question(id):
     try:
-        # Hapus options terlebih dahulu (menghindari constraint error)
-        QuestionOption.query.filter_by(question_id=id).delete()
-        
-        # Hapus question
-        Question.query.filter_by(id=id).delete()
-        
+        question = Question.query.get(id)
+        if not question:
+            return jsonify({"error": "Question tidak ditemukan"}), 404
+            
+        # ORM-safe delete (otomatis menghapus options karena cascade delete-orphan)
+        db.session.delete(question)
         db.session.commit()
 
         return jsonify({"message": "Question berhasil dihapus"}), 200

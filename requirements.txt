@@ -10,3 +10,4 @@ flask-socketio
 eventlet
 tensorflow
 numpy
+firebase-admin
