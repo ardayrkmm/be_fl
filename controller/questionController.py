@@ -84,10 +84,11 @@ def get_questions():
         # =========================
         # Map category → target_field agar Flutter bisa routing per step
         CATEGORY_TARGET_MAP = {
-            "PAIN":     "tingkat_nyeri",
-            "DURATION": "durasi_nyeri_minggu",
-            "RF":       "red_flag",
-            None:       "id_bagian",  # pertanyaan pilih bagian tubuh
+            "TINGKAT_NYERI": "tingkat_nyeri",
+            "DURASI_NYERI":  "durasi_nyeri_minggu",
+            "REDFLAG":       "red_flag",
+            "KONDISI":       "kondisi",
+            None:            "id_bagian",  # pertanyaan pilih bagian tubuh
         }
 
         result = []

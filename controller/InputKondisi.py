@@ -847,11 +847,13 @@ def create_kondisi_user():
         db.session.add(kondisi)
         db.session.commit()
 
+        stop_screening = has_red_flag or rekomendasi == "rujuk"
+
         return jsonify({
             "success": True,
             "id_form": kondisi.id_form,
             "message": "Screening berhasil disimpan",
-            "stop": has_red_flag,
+            "stop": stop_screening,
             "has_red_flag": has_red_flag,
             "red_flag_detail": red_flag_detail or None,
             "data": {
@@ -863,7 +865,8 @@ def create_kondisi_user():
                 "red_flag_detail": red_flag_detail or None,
                 "kondisi_detail": kondisi_detail or None,
                 "rekomendasi": rekomendasi,
-                "perlu_evaluasi": perlu_evaluasi
+                "perlu_evaluasi": perlu_evaluasi,
+                "stop": stop_screening
             }
         }), 201
 

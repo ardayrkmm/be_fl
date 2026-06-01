@@ -329,10 +329,6 @@ class LatihanBagian(db.Model):
     # PROGRESSION
     # =====================
 
-    progression_repetisi = db.Column(db.Integer, default=2)
-
-    progression_hold = db.Column(db.Integer, default=5)
-
     __table_args__ = (
         db.UniqueConstraint("id_latihan", "id_bagian", name="uq_latihan_bagian"),
     )

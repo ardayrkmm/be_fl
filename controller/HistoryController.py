@@ -121,9 +121,18 @@ def _debug_aktifitas_query(endpoint, user_id, raw_id_bagian, selected_id_bagian,
 
 
 @history_bp.route("/aktifitas/bagian-tubuh", methods=["GET"])
+@jwt_required()
 def get_aktifitas_bagian_tubuh():
+    user_id = str(get_jwt_identity())
     try:
-        bagian_list = sorted(BagianTubuh.query.all(), key=_sort_bagian_tubuh)
+        bagian_list = (
+            db.session.query(BagianTubuh)
+            .join(KondisiUser, KondisiUser.id_bagian == BagianTubuh.id_bagian)
+            .filter(KondisiUser.id_user == user_id)
+            .distinct()
+            .all()
+        )
+        bagian_list = sorted(bagian_list, key=_sort_bagian_tubuh)
 
         return jsonify({
             "success": True,
@@ -233,16 +242,21 @@ def get_aktifitas_analytics():
             if valid_nyeri_sesudah else 0
         )
 
-        grouped_by_date = {}
-        for history in histories:
+        grouped_data = {}
+        for history, bagian in rows:
             if not history.tanggal:
                 continue
             tanggal = history.tanggal.date()
-            grouped_by_date.setdefault(tanggal, []).append(history)
+            bagian_id = bagian.id_bagian if bagian else "unknown"
+            bagian_nama = bagian.nama_bagian if bagian else "Unknown"
+            
+            key = (bagian_id, bagian_nama, tanggal)
+            grouped_data.setdefault(key, []).append(history)
 
         chart = []
-        for tanggal in sorted(grouped_by_date.keys()):
-            daily_histories = grouped_by_date[tanggal]
+        for key in sorted(grouped_data.keys(), key=lambda x: x[2]):
+            bagian_id, bagian_nama, tanggal = key
+            daily_histories = grouped_data[key]
 
             daily_nyeri_sebelum = [
                 h.vas_sebelum for h in daily_histories if h.vas_sebelum is not None
@@ -273,6 +287,8 @@ def get_aktifitas_analytics():
                     if daily_akurasi else 0
                 ),
                 "durasi_total": _round_number(sum(daily_durasi)),
+                "id_bagian": bagian_id,
+                "nama_bagian": bagian_nama,
             })
 
         return jsonify({
