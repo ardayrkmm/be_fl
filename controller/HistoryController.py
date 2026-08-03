@@ -485,6 +485,8 @@ def get_detail_aktifitas_history(id_history):
                 "sisi": detail.sisi,
                 "repetisi_tercapai": detail.repetisi_tercapai or 0,
                 "akurasi_latihan": _round_number(detail.akurasi_latihan),
+                "video_url": latihan.video_url if latihan else None,
+                "url_gambar": latihan.url_gambar if latihan else None,
             })
 
         return jsonify({
@@ -690,6 +692,9 @@ def simpan_history_dan_selesai():
 
         jadwal.status = "Completed"
 
+        if kondisi and vas_sesudah is not None:
+            kondisi.tingkat_nyeri = vas_sesudah
+
         next_jadwal = JadwalLatihanUser.query.filter(
             JadwalLatihanUser.id_user == user_id,
             JadwalLatihanUser.id_form == jadwal.id_form,
@@ -747,40 +752,6 @@ def simpan_history_dan_selesai():
             "message": "Terjadi kesalahan pada server",
             "error": str(e)
         }), 500
-
-# @history_bp.route("/history/me", methods=["GET"])
-# @jwt_required()
-# def get_my_history():
-#     user_id = str(get_jwt_identity())
-    
-#     # Ambil 10 riwayat jadwal terakhir
-#     histories = HistoryAktifitas.query.filter_by(id_user=user_id)\
-#                 .order_by(HistoryAktifitas.tanggal.desc()).limit(10).all()
-
-#     result = []
-#     for h in histories:
-#         # Menghitung total latihan yang dilakukan dalam jadwal ini
-#         total_latihan = len(h.details)
-        
-#         result.append({
-#             "id_history": h.id_history,
-#             "tanggal": h.tanggal.strftime("%Y-%m-%d %H:%M"),
-#             "durasi_total_menit": round(h.durasi_total / 60, 1), # Konversi detik ke menit
-#             "akurasi_total": h.akurasi_total,
-#             "total_gerakan": total_latihan,
-#             "nama_jadwal": h.jadwal_latihan.nama_jadwal if h.jadwal_latihan else "Program Latihan",
-#             # Mengirimkan detail gerakan secara ringkas
-#             "latihan_dilakukan": [
-#                 {
-#                     "nama_latihan": d.latihan_ref.nama_latihan if d.latihan_ref else "Unknown",
-#                     "sisi": d.sisi,
-#                     "akurasi": d.akurasi_latihan
-#                 } for d in h.details
-#             ]
-#         })
-
-#     return jsonify({"success": True, "data": result}), 200
-
 
 @history_bp.route("/history/me", methods=["GET"])
 @jwt_required()
@@ -875,237 +846,6 @@ def get_my_history():
         },
         "data": result
     }), 200
-
-# @history_bp.route("/analitik", methods=["GET"])
-# @jwt_required()
-# def get_analitik():
-#     user_id = str(get_jwt_identity())
-    
-#     # 1. Ambil query parameter 'date' (Format: YYYY-MM-DD), default hari ini
-#     date_str = request.args.get('date')
-#     if date_str:
-#         try:
-#             selected_date = datetime.strptime(date_str, "%Y-%m-%d")
-#         except ValueError:
-#             return jsonify({"success": False, "message": "Format tanggal salah. Gunakan YYYY-MM-DD"}), 400
-#     else:
-#         selected_date = datetime.utcnow()
-
-#     # 2. Hitung Hari Senin s/d Minggu untuk Chart Mingguan
-#     # weekday(): 0 = Senin, 6 = Minggu
-#     start_of_week = selected_date - timedelta(days=selected_date.weekday())
-#     end_of_week = start_of_week + timedelta(days=6)
-
-#     try:
-#         # --- A. QUERY CHART MINGGUAN ---
-#         # Ambil semua history di minggu tersebut
-#         histories_week = HistoryAktifitas.query.filter(
-#             HistoryAktifitas.id_user == user_id,
-#             func.date(HistoryAktifitas.tanggal) >= start_of_week.date(),
-#             func.date(HistoryAktifitas.tanggal) <= end_of_week.date()
-#         ).all()
-
-#         # Inisialisasi array 7 hari (Senin - Minggu) dengan nilai 0
-#         weekly_data = [0, 0, 0, 0, 0, 0, 0]
-        
-#         for h in histories_week:
-#             # Cari index hari (0 untuk Senin, dst)
-#             day_index = h.tanggal.weekday()
-#             # Tambahkan durasi (konversi detik ke menit)
-#             durasi_menit = (h.durasi_total or 0) / 60.0
-#             weekly_data[day_index] += durasi_menit
-
-#         # Format agar 1 angka di belakang koma, atau bulatkan ke int
-#         weekly_data = [round(val) for val in weekly_data]
-
-#         # --- B. QUERY LATIHAN HARIAN (Pada tanggal yang dipilih) ---
-#         histories_day = HistoryAktifitas.query.filter(
-#             HistoryAktifitas.id_user == user_id,
-#             func.date(HistoryAktifitas.tanggal) == selected_date.date()
-#         ).order_by(HistoryAktifitas.tanggal.desc()).all()
-
-#         harian_data = []
-#         for hd in histories_day:
-#             jadwal = hd.jadwal_latihan
-#             nama_program = jadwal.nama_jadwal if jadwal else "Program Bebas"
-#             url_gambar = jadwal.url_gambar if jadwal else "Program Bebas"
-            
-#             # Rangkum detail gerakan
-#             detail_gerakan = []
-            
-#             for d in hd.details:
-#                 detail_gerakan.append({
-#                     "nama_latihan": d.latihan_ref.nama_latihan if d.latihan_ref else "Gerakan",
-#                     "sisi": d.sisi,
-#                     "akurasi": d.akurasi_latihan,
-#                     "repetisi": d.repetisi_tercapai
-#                 })
-
-#             harian_data.append({
-#                 "id_history": hd.id_history,
-#                 "nama_program": nama_program,
-#                 "waktu": hd.tanggal.strftime("%H:%M"),
-#                 "durasi_menit": round((hd.durasi_total or 0) / 60.0),
-#                 "akurasi_total": hd.akurasi_total,
-#                 "url_gambar": url_gambar,
-#                 "detail_gerakan": detail_gerakan
-#             })
-
-#         # --- C. RESPONSE JSON ---
-#         return jsonify({
-#             "success": True,
-#             "data": {
-#                 "selected_date": selected_date.strftime("%Y-%m-%d"),
-#                 "mingguan": {
-#                     "label": ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
-#                     "data": weekly_data
-#                 },
-#                 "harian": harian_data
-#             }
-#         }), 200
-
-#     except Exception as e:
-#         return jsonify({"success": False, "error": str(e)}), 500
-
-
-
-# @history_bp.route("/analitik", methods=["GET"])
-# @jwt_required()
-# def get_analitik():
-#     user_id = str(get_jwt_identity())
-    
-#     # 1. Ambil query parameter 'date' (Format: YYYY-MM-DD)
-#     date_str = request.args.get('date')
-#     if date_str:
-#         try:
-#             selected_date = datetime.strptime(date_str, "%Y-%m-%d")
-#         except ValueError:
-#             return jsonify({"success": False, "message": "Format tanggal salah. Gunakan YYYY-MM-DD"}), 400
-#     else:
-#         selected_date = datetime.utcnow()
-
-#     # 2. Hitung range minggu (Senin - Minggu)
-#     start_of_week = selected_date - timedelta(days=selected_date.weekday())
-#     end_of_week = start_of_week + timedelta(days=6)
-
-#     try:
-#         # =====================================================
-#         # A. DATA MINGGUAN
-#         # =====================================================
-#         histories_week = HistoryAktifitas.query.filter(
-#             HistoryAktifitas.id_user == user_id,
-#             func.date(HistoryAktifitas.tanggal) >= start_of_week.date(),
-#             func.date(HistoryAktifitas.tanggal) <= end_of_week.date()
-#         ).all()
-
-#         # Durasi
-#         weekly_duration = [0, 0, 0, 0, 0, 0, 0]
-
-#         # Delta VAS
-#         weekly_vas_total = [0, 0, 0, 0, 0, 0, 0]
-#         weekly_vas_count = [0, 0, 0, 0, 0, 0, 0]
-
-#         for h in histories_week:
-#             idx = h.tanggal.weekday()
-
-#             # Durasi
-#             durasi_menit = (h.durasi_total or 0) / 60.0
-#             weekly_duration[idx] += durasi_menit
-
-#             # Delta VAS
-#             if h.delta_vas is not None:
-#                 weekly_vas_total[idx] += h.delta_vas
-#                 weekly_vas_count[idx] += 1
-
-#         # Format durasi
-#         weekly_duration = [round(val) for val in weekly_duration]
-
-#         # Rata-rata delta VAS
-#         weekly_vas_avg = [
-#             round(weekly_vas_total[i] / weekly_vas_count[i], 2) if weekly_vas_count[i] > 0 else 0
-#             for i in range(7)
-#         ]
-
-#         # =====================================================
-#         # B. DATA HARIAN
-#         # =====================================================
-#         histories_day = HistoryAktifitas.query.filter(
-#             HistoryAktifitas.id_user == user_id,
-#             func.date(HistoryAktifitas.tanggal) == selected_date.date()
-#         ).order_by(HistoryAktifitas.tanggal.desc()).all()
-
-#         harian_data = []
-
-#         for hd in histories_day:
-#             jadwal = hd.jadwal_latihan
-#             nama_program = jadwal.nama_jadwal if jadwal else "Program Bebas"
-#             url_gambar = jadwal.url_gambar if jadwal else None
-
-#             detail_gerakan = []
-#             for d in hd.details:
-#                 detail_gerakan.append({
-#                     "nama_latihan": d.latihan_ref.nama_latihan if d.latihan_ref else "Gerakan",
-#                     "sisi": d.sisi,
-#                     "akurasi": d.akurasi_latihan,
-#                     "repetisi": d.repetisi_tercapai
-#                 })
-
-#             harian_data.append({
-#                 "id_history": hd.id_history,
-#                 "nama_program": nama_program,
-#                 "waktu": hd.tanggal.strftime("%H:%M"),
-#                 "durasi_menit": round((hd.durasi_total or 0) / 60.0),
-#                 "akurasi_total": hd.akurasi_total,
-
-#                 # 🔥 KUNCI CLINICAL
-#                 "vas_sebelum": hd.vas_sebelum,
-#                 "vas_sesudah": hd.vas_sesudah,
-#                 "delta_vas": hd.delta_vas,
-#                 "status": hd.status,
-#                 "rekomendasi": hd.rekomendasi,
-
-#                 "url_gambar": url_gambar,
-#                 "detail_gerakan": detail_gerakan
-#             })
-
-#         # =====================================================
-#         # C. SUMMARY HARIAN
-#         # =====================================================
-#         total_sesi = len(histories_day)
-
-#         valid_delta = [h.delta_vas for h in histories_day if h.delta_vas is not None]
-#         avg_delta = round(sum(valid_delta) / len(valid_delta), 2) if valid_delta else None
-
-#         # =====================================================
-#         # D. RESPONSE
-#         # =====================================================
-#         return jsonify({
-#             "success": True,
-#             "data": {
-#                 "selected_date": selected_date.strftime("%Y-%m-%d"),
-
-#                 "mingguan": {
-#                     "label": ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
-#                     "durasi": weekly_duration,
-#                     "rata_delta_vas": weekly_vas_avg
-#                 },
-
-#                 "summary": {
-#                     "total_sesi": total_sesi,
-#                     "rata_delta_vas": avg_delta
-#                 },
-
-#                 "harian": harian_data
-#             }
-#         }), 200
-
-#     except Exception as e:
-#         return jsonify({
-#             "success": False,
-#             "message": "Terjadi kesalahan",
-#             "error": str(e)
-#         }), 500
-
 @history_bp.route("/analitik", methods=["GET"])
 @jwt_required()
 def get_analitik():

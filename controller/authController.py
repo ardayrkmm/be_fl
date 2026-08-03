@@ -73,6 +73,160 @@ def decode_reset_token(reset_token):
     return payload
 
 
+def build_email_template(title, description, code, expiry_text, note_text):
+    logo_url = os.getenv("APP_LOGO_URL")
+    if logo_url:
+        logo_html = f'<img src="{logo_url}" alt="PhysioMove" class="logo-img" style="max-height: 50px; width: auto; vertical-align: middle;">'
+    else:
+        logo_html = '<div class="logo-text" style="color: #FFFFFF; font-size: 28px; font-weight: 800; letter-spacing: 1px; margin: 0; font-family: \'Outfit\', \'Inter\', \'Segoe UI\', sans-serif;">PhysioMove</div>'
+
+    current_year = datetime.now().year
+    
+    html_content = f"""<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #F5F6FD;
+            color: #2B2B2C;
+            -webkit-font-smoothing: antialiased;
+        }}
+        .container {{
+            max-width: 600px;
+            margin: 40px auto;
+            background: #FFFFFF;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e2e8f0;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #2C3BC1 0%, #5D54FF 100%);
+            padding: 35px 30px;
+            text-align: center;
+        }}
+        .logo-text {{
+            color: #FFFFFF;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin: 0;
+            font-family: 'Outfit', 'Inter', 'Segoe UI', sans-serif;
+        }}
+        .logo-img {{
+            max-height: 50px;
+            width: auto;
+            vertical-align: middle;
+        }}
+        .content {{
+            padding: 40px 30px;
+            text-align: center;
+        }}
+        .content h1 {{
+            color: #2B2B2C;
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }}
+        .content p {{
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            color: #626262;
+        }}
+        .code-container {{
+            background-color: #F5F6FD;
+            border: 2px dashed #5D54FF;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 30px auto;
+            max-width: 280px;
+        }}
+        .code-text {{
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: 6px;
+            color: #2C3BC1;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }}
+        .expiry {{
+            font-size: 14px;
+            color: #626262;
+            font-weight: 500;
+            margin-top: 10px;
+        }}
+        .footer {{
+            background-color: #F5F6FD;
+            padding: 24px 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #626262;
+            border-top: 1px solid #e2e8f0;
+        }}
+        .footer p {{
+            margin: 4px 0;
+            font-size: 12px;
+            color: #626262;
+        }}
+        .disclaimer {{
+            margin-top: 16px;
+            font-style: italic;
+        }}
+    </style>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F5F6FD; color: #2B2B2C; -webkit-font-smoothing: antialiased;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F5F6FD; padding: 20px 0;">
+        <tr>
+            <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="background: linear-gradient(135deg, #2C3BC1 0%, #5D54FF 100%); padding: 35px 30px;">
+                            {logo_html}
+                        </td>
+                    </tr>
+                    <!-- Content -->
+                    <tr>
+                        <td align="center" style="padding: 40px 30px;">
+                            <h1 style="color: #2B2B2C; font-size: 22px; font-weight: 700; margin-top: 0; margin-bottom: 16px; font-family: 'Segoe UI', sans-serif;">{title}</h1>
+                            <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px; color: #626262; font-family: 'Segoe UI', sans-serif;">{description}</p>
+                            
+                            <!-- OTP Box -->
+                            <table border="0" cellpadding="0" cellspacing="0" style="margin: 30px auto; max-width: 280px; width: 100%;">
+                                <tr>
+                                    <td align="center" style="background-color: #F5F6FD; border: 2px dashed #5D54FF; border-radius: 12px; padding: 20px;">
+                                        <span style="font-size: 36px; font-weight: 800; letter-spacing: 6px; color: #2C3BC1; font-family: 'Courier New', Courier, monospace;">{code}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="font-size: 14px; color: #626262; font-weight: 500; margin-top: 10px; font-family: 'Segoe UI', sans-serif;">Kode ini berlaku selama <strong>{expiry_text}</strong>.</p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="background-color: #F5F6FD; padding: 24px 30px; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 4px 0; font-size: 12px; color: #626262; font-family: 'Segoe UI', sans-serif;">&copy; {current_year} PhysioMove. All rights reserved.</p>
+                            <p style="margin: 16px 0 4px 0; font-size: 12px; color: #626262; font-family: 'Segoe UI', sans-serif; font-style: italic;">{note_text}</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
+    return html_content
+
+
 def send_reset_password_email(to_email, code):
     mail_server = os.getenv("MAIL_SERVER")
     mail_port = os.getenv("MAIL_PORT")
@@ -84,13 +238,26 @@ def send_reset_password_email(to_email, code):
         return False
 
     msg = EmailMessage()
-    msg["Subject"] = "Kode Reset Password"
+    msg["Subject"] = "Kode Reset Password PhysioMove"
     msg["From"] = mail_username
     msg["To"] = to_email
-    msg.set_content(
-        f"Kode reset password Anda adalah: {code}\n\n"
-        "Kode ini berlaku selama 15 menit."
+    
+    # Fallback plain text
+    plain_text = (
+        f"Kode reset password PhysioMove Anda adalah: {code}\n\n"
+        "Kode ini berlaku selama 15 menit.\n\n"
+        "Jika kamu tidak meminta reset password, abaikan email ini."
     )
+    msg.set_content(plain_text)
+    
+    # HTML version
+    title = "Reset Password Akun"
+    description = "Masukkan kode berikut di aplikasi PhysioMove untuk melanjutkan proses reset password."
+    expiry_text = "15 menit"
+    note_text = "Jika kamu tidak meminta reset password, abaikan email ini."
+    
+    html_body = build_email_template(title, description, code, expiry_text, note_text)
+    msg.add_alternative(html_body, subtype="html")
 
     port = int(mail_port)
 
@@ -106,7 +273,6 @@ def send_reset_password_email(to_email, code):
     return True
 
 
-
 def send_verification_email(to_email, code):
     mail_server = os.getenv("MAIL_SERVER")
     mail_port = os.getenv("MAIL_PORT")
@@ -117,13 +283,26 @@ def send_verification_email(to_email, code):
         raise ValueError("Konfigurasi email belum lengkap")
 
     msg = EmailMessage()
-    msg["Subject"] = "Kode Verifikasi Email"
+    msg["Subject"] = "Kode Verifikasi Email PhysioMove"
     msg["From"] = mail_username
     msg["To"] = to_email
-    msg.set_content(
-        f"Kode verifikasi email Anda adalah: {code}\n\n"
-        "Kode ini berlaku selama 10 menit."
+    
+    # Fallback plain text
+    plain_text = (
+        f"Kode verifikasi email PhysioMove Anda adalah: {code}\n\n"
+        "Kode ini berlaku selama 10 menit.\n\n"
+        "Jika kamu tidak merasa membuat akun PhysioMove, abaikan email ini."
     )
+    msg.set_content(plain_text)
+    
+    # HTML version
+    title = "Verifikasi Email Akun"
+    description = "Masukkan kode berikut di aplikasi PhysioMove untuk menyelesaikan proses verifikasi email."
+    expiry_text = "10 menit"
+    note_text = "Jika kamu tidak merasa membuat akun PhysioMove, abaikan email ini."
+    
+    html_body = build_email_template(title, description, code, expiry_text, note_text)
+    msg.add_alternative(html_body, subtype="html")
 
     port = int(mail_port)
 
@@ -549,6 +728,57 @@ def refresh_token():
         "message": "Token refreshed successfully",
         "token": token
     }), 200
+
+import os
+from werkzeug.utils import secure_filename
+
+@auth_bp.route("/update-profile-photo", methods=["POST"])
+@jwt_required()
+def update_profile_photo():
+    user_id = get_user_id_from_jwt()
+    user = User.query.get(user_id)
+
+    if not user:
+        return error_response("Data pengguna tidak ditemukan.", 404, "User not found")
+
+    if 'image' not in request.files:
+        return error_response("File gambar tidak ditemukan.", 400, "No image part")
+        
+    file = request.files['image']
+    
+    if file.filename == '':
+        return error_response("File gambar tidak dipilih.", 400, "No selected file")
+
+    if file:
+        filename = secure_filename(file.filename)
+        import time
+        unique_filename = f"user_{user_id}_{int(time.time())}_{filename}"
+        
+        basedir = os.path.abspath(os.path.dirname(__file__))
+        project_dir = os.path.dirname(basedir)
+        upload_folder = os.path.join(project_dir, 'uploads')
+        
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)
+            
+        file_path = os.path.join(upload_folder, unique_filename)
+        file.save(file_path)
+        
+        user.img_url = f"uploads/{unique_filename}"
+        
+        try:
+            db.session.commit()
+            return jsonify({
+                "message": "Profile photo updated successfully",
+                "user": user.to_public_user()
+            }), 200
+        except Exception:
+            db.session.rollback()
+            return error_response(
+                "Sistem sedang mengalami gangguan. Silakan coba lagi nanti.",
+                500,
+                "Failed to update profile photo"
+            )
 
 
 @auth_bp.route("/health", methods=["GET"])

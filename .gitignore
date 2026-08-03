@@ -3,6 +3,7 @@ venv/
 env/
 .venv/
 .env
+fire.json
 
 # File kompilasi Python
 __pycache__/

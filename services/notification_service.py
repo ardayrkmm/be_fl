@@ -8,6 +8,7 @@ class NotificationService:
 
     @staticmethod
     def _format_notification(n):
+        sent_time = n.jadwal_kirim if n.jadwal_kirim else n.created_at
         return {
             "id_notifikasi": n.id_notifikasi,
             "judul": n.judul,
@@ -15,9 +16,9 @@ class NotificationService:
             "tipe": n.tipe,
             "status_baca": n.status_baca,
             "is_sent": n.is_sent,
-            "jadwal_kirim": n.jadwal_kirim.strftime("%Y-%m-%d %H:%M") if n.jadwal_kirim else None,
+            "jadwal_kirim": n.jadwal_kirim.strftime("%Y-%m-%d %H:%M:%S") if n.jadwal_kirim else None,
             "id_jadwal": n.id_jadwal,
-            "created_at": n.created_at.strftime("%Y-%m-%d %H:%M") if n.created_at else None
+            "created_at": sent_time.strftime("%Y-%m-%d %H:%M:%S") if sent_time else None
         }
 
     @staticmethod
@@ -119,7 +120,7 @@ class NotificationService:
 
     @staticmethod
     def get_user_notifications(id_user):
-        notifs = Notifikasi.query.filter_by(id_user=id_user)\
+        notifs = Notifikasi.query.filter_by(id_user=id_user, is_sent=True)\
             .order_by(Notifikasi.created_at.desc()).all()
 
         result = []

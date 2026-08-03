@@ -1,10 +1,10 @@
-Alphabet_Exercise
+Ankle_Alphabet_Exercise
 Calf_Raises
 Clamshell
 Knee_To_Chest
-Leg_Knee_Extension
 Lunge
 Quadricep_Stretch
+Seated_Knee_Extension
 Side_Leg_Raise
 Single_Leg_Balance
 Standing_Calf_Stretch

@@ -90,3 +90,30 @@ def delete_my_notification(id_notifikasi):
         current_user
     )
     return jsonify(result), status_code
+
+
+@notification_bp.route('/notifications/test-send', methods=['POST'])
+@jwt_required()
+def test_send_notification():
+    current_user = get_jwt_identity()
+    from models import User
+    user = User.query.get(current_user)
+    if not user:
+        return jsonify({"success": False, "message": "User tidak ditemukan"}), 404
+        
+    if not user.fcm_token:
+        return jsonify({"success": False, "message": "FCM Token user kosong"}), 400
+
+    from services.firebase_service import FirebaseService
+    res = FirebaseService.send_push(
+        token=user.fcm_token,
+        title="Tes Notifikasi",
+        body="Notifikasi dari PhysioMove berhasil dikirim.",
+        data={
+            "id_notifikasi": "TEST",
+            "id_jadwal": "",
+            "tipe": "test"
+        }
+    )
+    
+    return jsonify(res), 200 if res.get("success") else 500

@@ -347,10 +347,6 @@ class RehabRuleBagian(db.Model):
 
     sessions_per_week = db.Column(db.Integer, default=6)
     max_durasi_minggu_home = db.Column(db.Integer, default=3)
-    progression_interval_session = db.Column(
-        db.Integer,
-        default=2
-    )
 
 
 # =========================
@@ -387,6 +383,10 @@ class KondisiUser(db.Model):
     last_session_date = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    __table_args__ = (
+        db.UniqueConstraint("id_user", "id_bagian", name="uq_user_bagian_kondisi"),
+    )
+
 
 # =========================
 # JADWAL LATIHAN
@@ -405,9 +405,6 @@ class JadwalLatihanUser(db.Model):
     tanggal = db.Column(db.DateTime)
     status = db.Column(db.String(50), default="Locked")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # 🔥 EXTENSION
-    screening_stage = db.Column(db.Integer, default=1)
 
     details = relationship("JadwalLatihanDetail", backref="parent_jadwal", cascade="all, delete-orphan")
     # History harus tetap tersimpan walaupun program/jadwal ditutup.
@@ -432,10 +429,6 @@ class JadwalLatihanDetail(db.Model):
     status_eksekusi = db.Column(db.Boolean, default=False)
 
     latihan = relationship("Latihan")
-
-    # 🔥 EXTENSION
-    current_target_repetisi = db.Column(db.Integer)
-    current_target_set = db.Column(db.Integer)
 
 
 # =========================
