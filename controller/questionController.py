@@ -25,11 +25,12 @@ def update_durasi_db():
             for opt in q.options:
                 db.session.delete(opt)
             
-            # Buat option baru (Hanya 2 opsi sesuai permintaan)
+            # Buat option baru (3 opsi sesuai permintaan)
             opt1 = QuestionOption(id=str(uuid.uuid4())[:8], key="<2", label="Kurang dari 2 minggu", nilai=1, question_id=q.id)
-            opt2 = QuestionOption(id=str(uuid.uuid4())[:8], key=">2", label="Lebih dari 2 minggu", nilai=4, question_id=q.id)
+            opt2 = QuestionOption(id=str(uuid.uuid4())[:8], key="2-4", label="2 - 4 minggu", nilai=4, question_id=q.id)
+            opt3 = QuestionOption(id=str(uuid.uuid4())[:8], key=">4", label="Lebih dari 4 minggu", nilai=7, question_id=q.id)
             
-            db.session.add_all([opt1, opt2])
+            db.session.add_all([opt1, opt2, opt3])
             
         db.session.commit()
         return jsonify({"success": True, "message": "Database berhasil diupdate untuk durasi nyeri!"}), 200
