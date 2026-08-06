@@ -102,6 +102,12 @@ class NotificationService:
                 if push_result.get("success"):
                     notif.is_sent = True
                     db.session.commit()
+                else:
+                    error_msg = push_result.get("error", "")
+                    if "NotRegistered" in error_msg or "registration-token-not-registered" in error_msg.lower():
+                        user.fcm_token = None
+                        db.session.commit()
+                        print(f"[FCM] Removed invalid FCM token for user {user.id_user}")
 
             return {
                 "success": True,
