@@ -9,10 +9,14 @@ question_bp = Blueprint("question", __name__)
 @question_bp.route("/update-durasi-db", methods=["GET"])
 def update_durasi_db():
     try:
-        # 1. Update max_durasi_minggu_home
+        # 1. Update max_durasi_minggu_home and batas_durasi_kronis
         rules = RehabRuleBagian.query.all()
         for rule in rules:
             rule.max_durasi_minggu_home = 4
+            
+        thresholds = KlinisThresholdBagian.query.all()
+        for t in thresholds:
+            t.batas_durasi_kronis = 5
             
         # 2. Update Opsi Pertanyaan Durasi Nyeri
         qs = Question.query.filter(Question.category == 'DURASI_NYERI').all()
