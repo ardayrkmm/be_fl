@@ -1,14 +1,29 @@
 from app import create_app
 from models import db
-from models import Question, QuestionOption, RehabRuleBagian, KlinisThresholdBagian
+from models import Question, QuestionOption, RehabRuleBagian, KlinisThresholdBagian, BagianTubuh
 import uuid
 
 app = create_app()
 with app.app_context():
-    # 1. Update max_durasi_minggu_home
-    rules = RehabRuleBagian.query.all()
-    for rule in rules:
-        rule.max_durasi_minggu_home = 4
+    # 1. Update max_durasi_minggu_home sesuai permintaan
+    mapping_minggu = {
+        "pinggul": 2,
+        "paha": 3,
+        "lutut": 3,
+        "tungkai bawah": 2,
+        "ankle": 1,
+        "engkel": 1,
+        "kaki": 2
+    }
+    
+    bagians = BagianTubuh.query.all()
+    for b in bagians:
+        if b.nama_bagian and b.nama_bagian.lower() in mapping_minggu:
+            rule = RehabRuleBagian.query.filter_by(id_bagian=b.id_bagian).first()
+            if rule:
+                max_m = mapping_minggu[b.nama_bagian.lower()]
+                rule.max_durasi_minggu_home = max_m
+                print(f"Updated max_durasi_minggu_home for {b.nama_bagian} to {max_m} minggu.")
         
     thresholds = KlinisThresholdBagian.query.all()
     for t in thresholds:
