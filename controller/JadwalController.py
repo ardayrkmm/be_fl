@@ -178,6 +178,26 @@ def get_jadwal_hari_ini():
                     id_bagian=id_bagian_for_jadwal
                 ).first()
 
+            final_set = rule_for_lat.target_set if rule_for_lat else None
+            final_rep = rule_for_lat.target_repetisi if rule_for_lat else None
+            final_waktu = rule_for_lat.target_waktu if rule_for_lat else None
+            final_hold = int(rule_for_lat.hold_detik) if (rule_for_lat and rule_for_lat.hold_detik is not None) else 0
+
+            if kondisi_for_jadwal and kondisi_for_jadwal.durasi_nyeri_minggu is not None:
+                durasi = kondisi_for_jadwal.durasi_nyeri_minggu
+                if durasi < 2:
+                    final_set = 2
+                    if final_waktu is not None and final_waktu > 0:
+                        final_waktu = 10
+                    else:
+                        final_rep = 8
+                elif 2 <= durasi <= 4:
+                    final_set = 3
+                    if final_waktu is not None and final_waktu > 0:
+                        final_waktu = 20
+                    else:
+                        final_rep = 12
+
             program.append({
                 "id_jadwal": j.id_jadwal,
                 "nama_jadwal": j.nama_jadwal,
@@ -190,10 +210,10 @@ def get_jadwal_hari_ini():
                     "video_url": lat.video_url,
                     "sisi": detail.sisi,
                     "target": {
-                        "set": rule_for_lat.target_set if rule_for_lat else None,
-                        "repetisi": rule_for_lat.target_repetisi if rule_for_lat else None,
-                        "waktu": rule_for_lat.target_waktu if rule_for_lat else None,
-                        "hold_detik": int(rule_for_lat.hold_detik) if (rule_for_lat and rule_for_lat.hold_detik is not None) else 0
+                        "set": final_set,
+                        "repetisi": final_rep,
+                        "waktu": final_waktu,
+                        "hold_detik": final_hold
                     }
                 }
             })
@@ -707,18 +727,38 @@ def get_jadwal_per_fase():
         ).first()
 
         if lat.id_latihan not in latihan_map:
+            final_set = rule.target_set if rule else None
+            final_rep = rule.target_repetisi if rule else None
+            final_waktu = rule.target_waktu if rule else None
+            final_hold = int(rule.hold_detik) if (rule and rule.hold_detik is not None) else 0
+
+            if kondisi and kondisi.durasi_nyeri_minggu is not None:
+                durasi = kondisi.durasi_nyeri_minggu
+                if durasi < 2:
+                    final_set = 2
+                    if final_waktu is not None and final_waktu > 0:
+                        final_waktu = 10
+                    else:
+                        final_rep = 8
+                elif 2 <= durasi <= 4:
+                    final_set = 3
+                    if final_waktu is not None and final_waktu > 0:
+                        final_waktu = 20
+                    else:
+                        final_rep = 12
+
             latihan_map[lat.id_latihan] = {
                 "id_latihan": lat.id_latihan,
                 "nama_latihan": lat.nama_latihan,
                 "deskripsi": lat.deskripsi,
                 "image_url": lat.url_gambar,
                 "level": int(lat.level) if lat.level else 1,
-                "duration": int(rule.target_waktu or 0) if rule else 0,
+                "duration": int(final_waktu or 0),
                 "target": {
-                    "set": rule.target_set if rule else None,
-                    "repetisi": rule.target_repetisi if rule else None,
-                    "waktu": rule.target_waktu if rule else None,
-                    "hold_detik": int(rule.hold_detik) if (rule and rule.hold_detik is not None) else 0
+                    "set": final_set,
+                    "repetisi": final_rep,
+                    "waktu": final_waktu,
+                    "hold_detik": final_hold
                 },
                 "video_url": lat.video_url,
                 "is_unilateral": lat.is_unilateral,

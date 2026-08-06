@@ -41,11 +41,11 @@ class AssessmentService:
             red_flag_detail = {k: data.get(k, False) for k in red_flag_keys if data.get(k, False)}
             has_red_flag = bool(red_flag_detail)
 
-            # Tambahkan red flag otomatis jika nyeri > 7 atau durasi > 12 minggu
+            # Tambahkan red flag otomatis jika nyeri > 7 atau durasi > 4 minggu
             if tingkat_nyeri >= 8:
                 has_red_flag = True
                 red_flag_detail['nyeri_ekstrem'] = True
-            if durasi_nyeri_minggu and durasi_nyeri_minggu >= 12:
+            if durasi_nyeri_minggu and durasi_nyeri_minggu > 4:
                 has_red_flag = True
                 red_flag_detail['durasi_kronis'] = True
 
@@ -58,7 +58,7 @@ class AssessmentService:
                 # Tentukan fase berdasarkan durasi
                 if durasi_nyeri_minggu <= 1:
                     fase = 'F1'
-                elif durasi_nyeri_minggu <= 3:
+                elif durasi_nyeri_minggu <= 4:
                     fase = 'F2'
                 else:
                     fase = 'F3'

@@ -4,6 +4,7 @@ env/
 .venv/
 .env
 fire.json
+fire - Copy.json
 
 # File kompilasi Python
 __pycache__/

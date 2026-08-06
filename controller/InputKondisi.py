@@ -152,9 +152,7 @@ def create_kondisi_user():
         elif tingkat_nyeri >= threshold.batas_nyeri_ekstrem:
             rekomendasi = "rujuk"
             perlu_evaluasi = True
-        elif durasi_nyeri == 1 or ("kurang" in durasi_nyeri_label and "3" in durasi_nyeri_label):
-            rekomendasi = "kompres"
-            perlu_evaluasi = False
+
         elif has_kondisi_true:
             rekomendasi = "latihan_mandiri"
             perlu_evaluasi = False

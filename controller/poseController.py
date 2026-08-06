@@ -3408,7 +3408,7 @@ def normalize_label(value):
 # LOAD MODEL + LABELS
 # ===============================
 def load_model_and_labels(model_path, labels_path, model_name):
-    print(f"🔧 Loading {model_name}: {model_path}")
+    print(f"[*] Loading {model_name}: {model_path}")
 
     # Karena kita sudah me-monkey patch TensorFlow di atas,
     # kita tidak perlu lagi menggunakan custom_objects di sini.
@@ -3426,9 +3426,9 @@ def load_model_and_labels(model_path, labels_path, model_name):
     if len(loaded_labels) == 0:
         raise ValueError(f"Labels file empty: {labels_path}")
 
-    print(f"✅ {model_name} loaded")
-    print(f"✅ {model_name} labels: {len(loaded_labels)} classes")
-    print(f"📌 {model_name} labels:", loaded_labels)
+    print(f"[OK] {model_name} loaded")
+    print(f"[OK] {model_name} labels: {len(loaded_labels)} classes")
+    print(f"[INFO] {model_name} labels:", loaded_labels)
 
     return loaded_model, loaded_labels
 
@@ -3439,13 +3439,13 @@ def load_pose_model():
     try:
         model, labels = load_model_and_labels(MODEL_PATH, LABELS_PATH, "MAIN MODEL")
     except Exception as e:
-        print("❌ FATAL MAIN MODEL LOAD ERROR:", e)
+        print("[X] FATAL MAIN MODEL LOAD ERROR:", e)
         model = None; labels = []
 
     try:
         specialist_model, specialist_labels = load_model_and_labels(MODEL_PATH_SPE, LABELS_PATH_SPE, "SPECIALIST MODEL")
     except Exception as e:
-        print("⚠️ SPECIALIST MODEL LOAD ERROR:", e)
+        print("[!] SPECIALIST MODEL LOAD ERROR:", e)
         specialist_model = None; specialist_labels = []
 
     try:
