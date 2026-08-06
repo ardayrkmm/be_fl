@@ -303,7 +303,7 @@ def submit_pain_screening(id_jadwal):
         can_start_exercise = False
         jadwal.status = "Need Screening"
         rekomendasi = "Nyeri masih cukup tinggi. Sebaiknya istirahat hari ini."
-    elif previous_pain is not None and tingkat_nyeri >= previous_pain:
+    elif previous_pain is not None and tingkat_nyeri > previous_pain:
         if jadwal.minggu >= max_minggu:
             decision = "stop"
             action_result = "stop"
@@ -316,6 +316,19 @@ def submit_pain_screening(id_jadwal):
             can_start_exercise = False
             jadwal.status = "Need Screening"
             rekomendasi = "Nyeri meningkat dibanding sebelumnya. Silakan istirahat sampai besok."
+    elif previous_pain is not None and tingkat_nyeri == previous_pain:
+        if jadwal.minggu >= max_minggu:
+            decision = "stop"
+            action_result = "stop"
+            can_start_exercise = False
+            jadwal.status = "Stopped"
+            rekomendasi = "Batas waktu program mandiri telah tercapai tanpa penurunan nyeri. Silakan rujuk ke tenaga kesehatan."
+        else:
+            decision = "safe"
+            action_result = "maintain"
+            can_start_exercise = True
+            jadwal.status = "Unlocked"
+            rekomendasi = "Nyeri masih stabil di angka yang sama. Latihan dapat dilanjutkan."
     else:
         decision = "safe"
         action_result = "maintain"

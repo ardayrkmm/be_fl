@@ -1,11 +1,38 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import Question, QuestionOption, db, KlinisThresholdBagian, JadwalLatihanUser
+from models import Question, QuestionOption, db, KlinisThresholdBagian, JadwalLatihanUser, RehabRuleBagian
 from sqlalchemy.orm import joinedload
 import uuid
 
 question_bp = Blueprint("question", __name__)
 
+@question_bp.route("/update-durasi-db", methods=["GET"])
+def update_durasi_db():
+    try:
+        # 1. Update max_durasi_minggu_home
+        rules = RehabRuleBagian.query.all()
+        for rule in rules:
+            rule.max_durasi_minggu_home = 4
+            
+        # 2. Update Opsi Pertanyaan Durasi Nyeri
+        qs = Question.query.filter(Question.category == 'DURASI_NYERI').all()
+        for q in qs:
+            # Hapus option lama
+            for opt in q.options:
+                db.session.delete(opt)
+            
+            # Buat option baru
+            opt1 = QuestionOption(id=str(uuid.uuid4())[:8], key="<2", label="Kurang dari 2 minggu", nilai=1, question_id=q.id)
+            opt2 = QuestionOption(id=str(uuid.uuid4())[:8], key="2-4", label="2-4 minggu", nilai=4, question_id=q.id)
+            opt3 = QuestionOption(id=str(uuid.uuid4())[:8], key=">4", label="Lebih dari 4 minggu", nilai=7, question_id=q.id)
+            
+            db.session.add_all([opt1, opt2, opt3])
+            
+        db.session.commit()
+        return jsonify({"success": True, "message": "Database berhasil diupdate untuk durasi nyeri!"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @question_bp.route("/questions", methods=["POST"])
 def create_question():
