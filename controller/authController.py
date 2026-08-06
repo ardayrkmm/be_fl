@@ -378,7 +378,7 @@ def register():
     )
 
     db.session.add(user)
-    db.session.commit()
+    db.session.flush()
 
     token = generate_token(user.id_user, user.email, user.nama)
     verification_code = generate_verification_code()
@@ -390,7 +390,9 @@ def register():
 
     try:
         send_verification_email(user.email, verification_code)
+        db.session.commit()
     except Exception:
+        db.session.rollback()
         return error_response(
             "Sistem sedang mengalami gangguan. Silakan coba lagi nanti.",
             500,
