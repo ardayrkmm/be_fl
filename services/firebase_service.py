@@ -20,9 +20,16 @@ class FirebaseService:
 
             credentials_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
             credentials_path = os.getenv("FIREBASE_CREDENTIALS_PATH")
+            b64_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "fire_b64.txt")
 
             if credentials_json:
                 cred = credentials.Certificate(json.loads(credentials_json))
+            elif os.path.exists(b64_path):
+                import base64
+                with open(b64_path, "r") as f:
+                    b64_data = f.read().strip()
+                json_data = base64.b64decode(b64_data).decode("utf-8")
+                cred = credentials.Certificate(json.loads(json_data))
             elif credentials_path:
                 cred = credentials.Certificate(credentials_path)
             else:
